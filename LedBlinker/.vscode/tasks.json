@@ -10,10 +10,10 @@
             "linux": "true",
             "args": [
                 "-f",
-                "${workspaceFolder}/LedBlinker/GNUmakefile"
+                "${workspaceFolder}/GNUmakefile"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/LedBlinker"
+                "cwd": "${workspaceFolder}"
             },
             "problemMatcher": [
                 "$gcc"
@@ -30,11 +30,11 @@
             "linux": "true",
             "args": [
                 "-f",
-                "${workspaceFolder}/LedBlinker/GNUmakefile",
+                "${workspaceFolder}/GNUmakefile",
                 "clean"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/LedBlinker"
+                "cwd": "${workspaceFolder}"
             },
             "problemMatcher": [
                 "$gcc"
