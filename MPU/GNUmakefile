@@ -22,7 +22,7 @@
 ##==========================================================================
 
 # The executable file name. Must be specified.
-PROGRAM                = mputoy
+PROGRAM                = mputoy.out
 
 # C and C++ program compilers. Un-comment and specify for cross-compiling if needed. 
 #CC                    = gcc
@@ -91,8 +91,8 @@ HDREXTS = .h .H .hh .hpp .HPP .h++ .hxx .hp
 
 # The pre-processor and compiler options.
 # Users can override those variables from the command line.
-CFLAGS  = #-std=c17 #-O3
-CXXFLAGS= -std=c++17 #-O3
+CFLAGS  = -g #-std=c17 #-O3
+CXXFLAGS= -g -std=c++17 #-O3
 
 # The command used to delete file.
 RM     = rm -f

@@ -22,11 +22,13 @@
 ##==========================================================================
 
 # The executable file name. Must be specified.
-PROGRAM                = ledtoy.out
+LIBRARY                = libpqpca9685
 
 # C and C++ program compilers. Un-comment and specify for cross-compiling if needed. 
-#CC                    = gcc
-#CXX                   = g++
+CC                    = gcc
+CXX                   = g++
+AR                    = ar
+RANLIB                = ranlib
 # Un-comment the following line to compile C programs as C++ ones.
 #CC                    = $(CXX)
 
@@ -34,10 +36,10 @@ PROGRAM                = ledtoy.out
 EXTRA_CFLAGS           = -fdata-sections -ffunction-sections
 
 # The extra linker options, e.g. "-lmysqlclient -lz"
-EXTRA_LDFLAGS          = -lwiringPi
+EXTRA_LDFLAGS          = 
 
 # Specify the include dirs, e.g. "-I/usr/include/mysql -I./include -I/usr/include -I/usr/local/include".
-INCLUDE                = 
+INCLUDE                = -Iinclude
 
 # The C Preprocessor options (notice here "CPP" does not mean "C++"; man cpp for more info.). Actually $(INCLUDE) is included. 
 CPPFLAGS               = -Wall -Wextra    # helpful for writing better code (behavior-related)
@@ -47,33 +49,24 @@ LDFLAGS                =
 
 # The directories in which source files reside.
 # If not specified, all subdirectories of the current directory will be added recursively. 
-SRCDIRS               := 
+SRCDIRS               := src
 
 # OS specific. 
 EXTRA_CFLAGS_MACOS     = 
-EXTRA_LDFLAGS_MACOS    = -Wl,-search_paths_first -Wl,-dead_strip -v   # deleting unused code for Pear, for minimal exe size
-LDFLAGS_MACOS          =
 EXTRA_CFLAGS_LINUX     =
-EXTRA_LDFLAGS_LINUX    = -Wl,--gc-sections -Wl,--strip-all            # deleting unused code for Pear, for minimal exe size
-LDFLAGS_LINUX          =
 EXTRA_CFLAGS_WINDOWS   =
-EXTRA_LDFLAGS_WINDOWS  =
-LDFLAGS_WINDOWS        =
 
 # Actually process the OS specific flags. 
 UNAME_S  := $(shell uname -s)
 ifeq ($(UNAME_S), Darwin)      # if MacOS
 EXTRA_CFLAGS  += $(EXTRA_CFLAGS_MACOS)
 EXTRA_LDFLAGS += $(EXTRA_LDFLAGS_MACOS)
-LDFLAGS       += $(LDFLAGS_MACOS)
 else ifeq ($(UNAME_S), Linux)  # if Linux
 EXTRA_CFLAGS  += $(EXTRA_CFLAGS_LINUX)
 EXTRA_LDFLAGS += $(EXTRA_LDFLAGS_LINUX)
-LDFLAGS       += $(LDFLAGS_LINUX) 
 else                           # Windows, or... need to specify "MINGW" or "CYGWIN" to correctly detect. 
 EXTRA_CFLAGS  += $(EXTRA_CFLAGS_WINDOWS)
 EXTRA_LDFLAGS += $(EXTRA_LDFLAGS_WINDOWS)
-LDFLAGS       += $(LDFLAGS_WINDOWS)
 endif
 
 #Actually $(INCLUDE) is included in $(CPPFLAGS).
@@ -129,7 +122,7 @@ LINK.cxx    = $(CXX) $(EXTRA_CFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS)
 # Delete the default suffixes
 .SUFFIXES:
 
-all: $(PROGRAM)
+all: $(LIBRARY)
 
 # Rules for creating dependency files (.d).
 #------------------------------------------
@@ -204,14 +197,10 @@ ctags: $(HEADERS) $(SOURCES)
 
 # Rules for generating the executable.
 #-------------------------------------
-$(PROGRAM):$(OBJS)
-ifeq ($(SRC_CXX),)              # C program
-	$(LINK.c)   $(OBJS) $(EXTRA_LDFLAGS) -o $@
-	@echo Type ./$@ to execute the program.
-else                            # C++ program
-	$(LINK.cxx) $(OBJS) $(EXTRA_LDFLAGS) -o $@
-	@echo Type ./$@ to execute the program.
-endif
+$(LIBRARY):$(OBJS)
+	$(AR) rcs $@ $(OBJS)
+	@echo Library ./$@ created and linked.
+
 
 ifndef NODEP
 ifneq ($(DEPS),)
@@ -220,7 +209,7 @@ endif
 endif
 
 clean:
-	$(RM) $(OBJS) $(PROGRAM) $(PROGRAM).exe
+	$(RM) $(OBJS) $(DEPS) $(LIBRARY) $(LIBRARY).exe
 
 distclean: clean
 	$(RM) $(DEPS) TAGS
@@ -247,7 +236,7 @@ help:
 
 # Show variables (for debug use only.)
 show:
-	@echo 'PROGRAM     :' $(PROGRAM)
+	@echo 'LIBRARY     :' $(LIBRARY)
 	@echo 'SRCDIRS     :' $(SRCDIRS)
 	@echo 'HEADERS     :' $(HEADERS)
 	@echo 'SOURCES     :' $(SOURCES)

@@ -22,7 +22,7 @@
 ##==========================================================================
 
 # The executable file name. Must be specified.
-PROGRAM                = ledtoy.out
+PROGRAM                = servo.out
 
 # C and C++ program compilers. Un-comment and specify for cross-compiling if needed. 
 #CC                    = gcc
@@ -34,7 +34,7 @@ PROGRAM                = ledtoy.out
 EXTRA_CFLAGS           = -fdata-sections -ffunction-sections
 
 # The extra linker options, e.g. "-lmysqlclient -lz"
-EXTRA_LDFLAGS          = -lwiringPi
+EXTRA_LDFLAGS          = 
 
 # Specify the include dirs, e.g. "-I/usr/include/mysql -I./include -I/usr/include -I/usr/local/include".
 INCLUDE                = 
@@ -220,7 +220,7 @@ endif
 endif
 
 clean:
-	$(RM) $(OBJS) $(PROGRAM) $(PROGRAM).exe
+	$(RM) $(OBJS) $(DEPS) $(PROGRAM) $(PROGRAM).exe
 
 distclean: clean
 	$(RM) $(DEPS) TAGS
