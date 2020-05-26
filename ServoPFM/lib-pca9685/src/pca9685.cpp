@@ -26,8 +26,9 @@
 #include <cstdint>
 #include <stdio.h>
 #include <cassert>
+#include <unistd.h>
 
-#include <wiringPiI2C.h>
+#include <pigpiod_if2.h>
 
 #include "pca9685.h"
 
@@ -79,7 +80,12 @@ enum TPCA9685Mode2 {
 };
 
 PCA9685::PCA9685(std::uint8_t nAddress) : m_nAddress(nAddress) {
-	i2c_begin();
+	m_pi = pigpio_start(nullptr, nullptr);
+	if (m_pi < 0) return;
+
+	m_i2c_handle = i2c_open(1, 0, m_nAddress, 0x0);
+	if(m_i2c_handle < 0)
+		return;
 
 	AutoIncrement(true);
 
@@ -91,10 +97,12 @@ PCA9685::PCA9685(std::uint8_t nAddress) : m_nAddress(nAddress) {
 }
 
 PCA9685::~PCA9685(void) {
+	i2c_close(m_pi, m_i2c_handle);
+	pigpio_stop(m_pi);
 }
 
-void PCA9685::Sleep(bool bMode) {
-	std::uint8_t Data = I2cReadReg(TPCA9685Reg::MODE1);
+void PCA9685::Sleep(bool const bMode) {
+	std::uint8_t Data = i2c_read_byte_data( m_pi, m_i2c_handle, TPCA9685Reg::MODE1);
 
 	Data &= ~TPCA9685Mode1::SLEEP;
 
@@ -105,7 +113,7 @@ void PCA9685::Sleep(bool bMode) {
 	I2cWriteReg(TPCA9685Reg::MODE1, Data);
 
 	if (Data & ~TPCA9685Mode1::RESTART) {
-		udelay(500);
+		usleep(500);
 		Data |= TPCA9685Mode1::RESTART;
 	}
 }
@@ -122,7 +130,7 @@ std::uint8_t PCA9685::GetPreScaller(void) {
 	return 	I2cReadReg(TPCA9685Reg::PRE_SCALE);
 }
 
-void PCA9685::SetFrequency(std::uint16_t nFreq) {
+void PCA9685::SetFrequency(std::uint16_t const nFreq) {
 	SetPreScaller(CalcPresScale(nFreq));
 }
 
@@ -130,7 +138,7 @@ std::uint16_t PCA9685::GetFrequency(void) {
 	return CalcFrequency(GetPreScaller());
 }
 
-void PCA9685::SetOCH(TPCA9685Och enumTPCA9685Och) {
+void PCA9685::SetOCH(TPCA9685Och const enumTPCA9685Och) {
 	std::uint8_t Data = I2cReadReg(TPCA9685Reg::MODE2);
 
 	Data &= ~TPCA9685Mode2::OCH;
@@ -148,7 +156,7 @@ TPCA9685Och PCA9685::GetOCH(void) {
 	return static_cast<TPCA9685Och>(Data);
 }
 
-void PCA9685::SetInvert(bool bInvert) {
+void PCA9685::SetInvert(bool const bInvert) {
 	std::uint8_t Data = I2cReadReg(TPCA9685Reg::MODE2);
 
 	Data &= ~TPCA9685Mode2::INVRT;
@@ -166,7 +174,7 @@ bool PCA9685::GetInvert(void) {
 	return (Data == TPCA9685Mode2::INVRT);
 }
 
-void PCA9685::SetOutDriver(bool bOutDriver) {
+void PCA9685::SetOutDriver(bool const bOutDriver) {
 	std::uint8_t Data = I2cReadReg(TPCA9685Reg::MODE2);
 
 	Data &= ~TPCA9685Mode2::OUTDRV;
@@ -184,7 +192,7 @@ bool PCA9685::GetOutDriver(void) {
 	return (Data == TPCA9685Mode2::OUTDRV);
 }
 
-void PCA9685::Write(std::uint8_t nChannel, uint16_t nOn, uint16_t nOff) {
+void PCA9685::Write(std::uint8_t const nChannel, uint16_t const nOn, uint16_t const nOff) {
 	std::uint8_t reg;
 
 	if (nChannel <= 15) {
@@ -196,19 +204,19 @@ void PCA9685::Write(std::uint8_t nChannel, uint16_t nOn, uint16_t nOff) {
 	I2cWriteReg(reg, nOn, nOff);
 }
 
-void PCA9685::Write(std::uint8_t nChannel, uint16_t nValue) {
+void PCA9685::Write(std::uint8_t const nChannel, uint16_t const nValue) {
 	Write(nChannel, static_cast<std::uint16_t>(0), nValue);
 }
 
-void PCA9685::Write(std::uint16_t nOn, uint16_t nOff) {
+void PCA9685::Write(std::uint16_t const nOn, uint16_t const nOff) {
 	Write(static_cast<std::uint8_t>(16), nOn, nOff);
 }
 
-void PCA9685::Write(std::uint16_t nValue) {
+void PCA9685::Write(std::uint16_t const nValue) {
 	Write(static_cast<std::uint8_t>(16), nValue);
 }
 
-void PCA9685::Read(std::uint8_t nChannel, uint16_t *pOn, uint16_t *pOff) {
+void PCA9685::Read(std::uint8_t const nChannel, uint16_t *pOn, uint16_t *pOff) {
 	assert(pOn != 0);
 	assert(pOff != 0);
 
@@ -233,7 +241,7 @@ void PCA9685::Read(std::uint16_t *pOn, uint16_t *pOff) {
 	Read(static_cast<std::uint8_t>(16), pOn, pOff);
 }
 
-void PCA9685::SetFullOn(std::uint8_t nChannel, bool bMode) {
+void PCA9685::SetFullOn(std::uint8_t const nChannel, bool const bMode) {
 	std::uint8_t reg;
 
 	if (nChannel <= 15) {
@@ -254,7 +262,7 @@ void PCA9685::SetFullOn(std::uint8_t nChannel, bool bMode) {
 
 }
 
-void PCA9685::SetFullOff(std::uint8_t nChannel, bool bMode) {
+void PCA9685::SetFullOff(std::uint8_t const nChannel, bool const bMode) {
 	std::uint8_t reg;
 
 	if (nChannel <= 15) {
@@ -280,7 +288,7 @@ std::uint8_t PCA9685::CalcPresScale(uint16_t nFreq) {
 	return Data;
 }
 
-std::uint16_t PCA9685::CalcFrequency(uint8_t nPreScale) {
+std::uint16_t PCA9685::CalcFrequency(uint8_t const nPreScale) {
 	std::uint16_t f_min;
 	std::uint16_t f_max;
 	const float f = static_cast<float>(OSC_FREQ) / 4096;
@@ -345,7 +353,7 @@ void PCA9685::Dump(void) {
 	printf("ALL_LED_OFF : %04x\n", off);
 }
 
-void PCA9685::AutoIncrement(bool bMode) {
+void PCA9685::AutoIncrement(bool const bMode) {
 	std::uint8_t Data = I2cReadReg(TPCA9685Reg::MODE1);
 
 	Data &= ~TPCA9685Mode1::AI;	// 0 Register Auto-Increment disabled. {default}
@@ -358,68 +366,73 @@ void PCA9685::AutoIncrement(bool bMode) {
 }
 
 void PCA9685::I2cSetup(void) {
-	i2c_set_address(m_nAddress);
-	i2c_set_baudrate(I2C_FULL_SPEED);
+	// i2c_set_address(m_nAddress);
+	// i2c_set_baudrate(I2C_FULL_SPEED);
 }
 
-void PCA9685::I2cWriteReg(std::uint8_t reg, uint8_t data) {
-	char buffer[2];
+void PCA9685::I2cWriteReg(std::uint8_t const reg, std::uint8_t const data) {
+	// char buffer[2];
 
-	buffer[0] = reg;
-	buffer[1] = data;
+	// buffer[0] = reg;
+	// buffer[1] = data;
+
+	I2cSetup();
+	i2c_write_byte_data(m_pi, m_i2c_handle, reg, data);
+	// i2c_write(buffer, 2);
+}
+
+std::uint8_t PCA9685::I2cReadReg(std::uint8_t const reg) {
+	// char data = reg;
 
 	I2cSetup();
 
-	i2c_write(buffer, 2);
-}
-
-std::uint8_t PCA9685::I2cReadReg(uint8_t reg) {
-	char data = reg;
-
-	I2cSetup();
-
-	i2c_write(&data, 1);
-	i2c_read(&data, 1);
+	// i2c_write(&data, 1);
+	// i2c_read(&data, 1);
+	std::uint8_t const data { i2c_read_byte_data(m_pi, m_i2c_handle, reg) };
 
 	return data;
 }
 
-void PCA9685::I2cWriteReg(std::uint8_t reg, uint16_t data) {
-	char buffer[3];
+void PCA9685::I2cWriteReg(std::uint8_t const reg, std::uint16_t const data) {
+	// char buffer[3];
 
-	buffer[0] = reg;
-	buffer[1] = (data & 0xFF);
-	buffer[2] = (data >> 8);
+	// buffer[0] = reg;
+	// buffer[1] = (data & 0xFF);
+	// buffer[2] = (data >> 8);
 
 	I2cSetup();
 
-	i2c_write(buffer, 3);
+	i2c_write_word_data(m_pi, m_i2c_handle, reg, data);
+	// i2c_write(buffer, 3);
 }
 
-std::uint16_t PCA9685::I2cReadReg16(uint8_t reg) {
-	char data = reg;
-	char buffer[2] = { 0, 0 };
+std::uint16_t PCA9685::I2cReadReg16(uint8_t const reg) {
+	// char data = reg;
+	// char buffer[2] = { 0, 0 };
 
 	I2cSetup();
 
-	i2c_write(&data, 1);
-	i2c_read(reinterpret_cast<char *>(&buffer), 2);
+	std::uint16_t const ret { i2c_read_word_data(m_pi, m_i2c_handle, reg) };
 
-	return (buffer[1] << 8) | buffer[0];
+	// i2c_write(&data, 1);
+	// i2c_read(reinterpret_cast<char *>(&buffer), 2);
+
+	// return (buffer[1] << 8) | buffer[0];
+	return ret;
 }
 
-void PCA9685::I2cWriteReg(std::uint8_t reg, uint16_t data, uint16_t data2) {
-	char buffer[5];
+void PCA9685::I2cWriteReg(std::uint8_t const reg, uint16_t const data0, uint16_t const data1) {
+	char buffer[4];
 
-	buffer[0] = reg;
-	buffer[1] = (data & 0xFF);
-	buffer[2] = (data >> 8);
-	buffer[3] = (data2 & 0xFF);
-	buffer[4] = (data2 >> 8);
+	buffer[0] = (data0 & 0xFF);
+	buffer[1] = (data0 >> 8);
+	buffer[2] = (data1 & 0xFF);
+	buffer[3] = (data1 >> 8);
 
 	I2cSetup();
 
-	i2c_write(buffer, 5);
+	i2c_write_block_data(m_pi, m_i2c_handle, reg, buffer, 32);
+	// i2c_write(buffer, 5);
 }
 
 };

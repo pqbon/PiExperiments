@@ -22,7 +22,7 @@
 ##==========================================================================
 
 # The executable file name. Must be specified.
-LIBRARY                = libpqpca9685
+LIBRARY                = libpqpca9685.a
 
 # C and C++ program compilers. Un-comment and specify for cross-compiling if needed. 
 CC                    = gcc
@@ -45,7 +45,7 @@ INCLUDE                = -Iinclude
 CPPFLAGS               = -Wall -Wextra    # helpful for writing better code (behavior-related)
 
 # The options used in linking as well as in any direct use of ld. 
-LDFLAGS                =
+LDFLAGS                = -Lpigpiod_if2
 
 # The directories in which source files reside.
 # If not specified, all subdirectories of the current directory will be added recursively. 

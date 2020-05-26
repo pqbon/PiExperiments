@@ -63,56 +63,58 @@ public:
 	PCA9685& operator=(PCA9685 &&) = delete;
 	~PCA9685(void);
 
-	void SetPreScaller(std::uint8_t);
+	void SetPreScaller(std::uint8_t const);
 	std::uint8_t GetPreScaller(void);
 
-	void SetFrequency(std::uint16_t);
+	void SetFrequency(std::uint16_t const);
 	std::uint16_t GetFrequency(void);
 
 	void SetOCH(TPCA9685Och);
 	TPCA9685Och GetOCH(void);
 
-	void SetInvert(bool);
+	void SetInvert(bool const);
 	bool GetInvert(void);
 
-	void SetOutDriver(bool);
+	void SetOutDriver(bool const);
 	bool GetOutDriver(void);
 
-	void Write(std::uint8_t, std::uint16_t, std::uint16_t);
-	void Read(std::uint8_t, std::uint16_t *, std::uint16_t *);
+	void Write(std::uint8_t const, std::uint16_t const, std::uint16_t const);
+	void Read(std::uint8_t const, std::uint16_t *, std::uint16_t *);
 
-	void Write(std::uint16_t, std::uint16_t);
+	void Write(std::uint16_t const, std::uint16_t const);
 	void Read(std::uint16_t *, std::uint16_t *);
 
-	void Write(std::uint8_t, std::uint16_t);
-	void Write(std::uint16_t);
+	void Write(std::uint8_t const, std::uint16_t const);
+	void Write(std::uint16_t const);
 
-	void SetFullOn(std::uint8_t, bool);
-	void SetFullOff(std::uint8_t, bool);
+	void SetFullOn(std::uint8_t const, bool const);
+	void SetFullOff(std::uint8_t const, bool const);
 
 	void Dump(void);
 
 private:
 	std::uint8_t CalcPresScale(std::uint16_t);
-	std::uint16_t CalcFrequency(std::uint8_t);
+	std::uint16_t CalcFrequency(std::uint8_t const);
 
 private:
-	void Sleep(bool);
-	void AutoIncrement(bool);
+	void Sleep(bool const);
+	void AutoIncrement(bool const);
 
 private:
 	void I2cSetup(void);
 
-	void I2cWriteReg(std::uint8_t, std::uint8_t);
-	std::uint8_t I2cReadReg(std::uint8_t);
+	void I2cWriteReg(std::uint8_t const, std::uint8_t const);
+	std::uint8_t I2cReadReg(std::uint8_t const);
 
-	void I2cWriteReg(std::uint8_t, std::uint16_t);
-	std::uint16_t I2cReadReg16(std::uint8_t);
+	void I2cWriteReg(std::uint8_t const, std::uint16_t const);
+	std::uint16_t I2cReadReg16(std::uint8_t const);
 
-	void I2cWriteReg(std::uint8_t, std::uint16_t, std::uint16_t);
+	void I2cWriteReg(std::uint8_t const, std::uint16_t const, std::uint16_t const);
 
 private:
 	std::uint8_t m_nAddress { I2C_ADDRESS_DEFAULT };
+	int m_i2c_handle {};
+	int m_pi {};
 };
 
 };
